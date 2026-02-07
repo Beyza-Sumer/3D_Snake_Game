@@ -14,15 +14,16 @@ public class SnakeController : MonoBehaviour
     public Transform food;
     public Transform minBorder;
     public Transform maxBorder;
-    private float spawnY = 1.5f;
+    public GameObject bodyPrefab;
+    public LayerMask snakeLayer;
+    private float moveTimer = 0f;
+    public float moveInterval = 0.2f;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI gameOverText;
-    private int score = 0;
-    public float moveInterval = 0.2f;
-    private float moveTimer = 0f;
-    public GameObject bodyPrefab;
     private Vector3 direction = Vector3.forward;
     private List<Transform> bodyParts = new List<Transform>();
+    //private List<Vector3> emptyCells = new List<Vector3>();
+
 
     private void Start()
     {
@@ -48,15 +49,18 @@ public class SnakeController : MonoBehaviour
             BodyMove();
             moveTimer = 0f;
         }
+
+        if (Physics.CheckSphere(food.position, 0.5f, snakeLayer))
+        {
+            SpawnFood();
+        }
     }
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Food"))
-        {
-            Spawn();
+        { 
             Grow();
-            score++;
-            scoreText.text = "Score: " + score.ToString();
+            ScoreText();
         }
         else if (other.CompareTag("Wall") || other.CompareTag("Body"))
         {
@@ -66,11 +70,11 @@ public class SnakeController : MonoBehaviour
             }
         }
     }
-    private void Spawn()
+    private void SpawnFood()
     {
         float randomX = Mathf.Round(Random.Range(minBorder.position.x, maxBorder.position.x));
         float randomZ = Mathf.Round(Random.Range(minBorder.position.z, maxBorder.position.z));
-        food.position = new Vector3(randomX, spawnY, randomZ);
+        food.position = new Vector3(randomX, 1.5f, randomZ);
     }
     private void BodyMove()
     {
@@ -83,10 +87,15 @@ public class SnakeController : MonoBehaviour
     }
     private void Grow()
     {
-        //Vector3 offScreenPos = new Vector3(-100, -100, -100);
         Vector3 spawnPos = bodyParts[bodyParts.Count - 1].position;
         GameObject newPart = Instantiate(bodyPrefab, spawnPos, Quaternion.identity);
         bodyParts.Add(newPart.transform);
+    }
+    private void ScoreText()
+    {
+        int score = 0;
+        score++;
+        scoreText.text = "Score: " + score.ToString();
     }
     private void GameOverText()
     {
